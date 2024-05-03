@@ -1,0 +1,5 @@
+{
+    "folder" : "texts",
+    "source_file" : "text_1.txt",
+    "target_file" : "text_1_encrypted.txt"
+}
