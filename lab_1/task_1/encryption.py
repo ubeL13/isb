@@ -3,7 +3,7 @@ from key_for_encryption import KEY
 from constant import PATHS, SIGNS
 
 
-def read_config(config_file) -> dict:
+def read_config(config_file: str) -> dict:
     """
         Load and return the configuration data from a JSON file.
         :param config_file: The path to the JSON configuration file.
@@ -13,7 +13,7 @@ def read_config(config_file) -> dict:
         return json.load(file)
 
 
-def read_text(file_path) -> str:
+def read_text(file_path: str) -> str:
     """
         Read and return the content of a text file.
         :param file_path: The path to the text file to be read.
@@ -23,7 +23,7 @@ def read_text(file_path) -> str:
         return file.read()
 
 
-def polybius_encrypt(text) -> str:
+def polybius_encrypt(text: str) -> str:
     """
         Encrypt a text using the Polybius square cipher.
         :param text: The plain text string to be encrypted.
@@ -46,7 +46,7 @@ def polybius_encrypt(text) -> str:
     return encrypted_text
 
 
-def write_text(file_path, text) -> None:
+def write_text(file_path: str, text: str) -> None:
     """
         Write text to a file, overwriting it if it already exists.
         :param file_path: The path to the file where the text will be written.
@@ -69,7 +69,6 @@ def main() -> None:
     source_text = read_text(f"{folder}/{source_file}")
     encrypted_text = polybius_encrypt(source_text)
     write_text(f"{folder}/{target_file}", encrypted_text)
-    print("Текст успешно зашифрован и сохранен.")
 
 
 if __name__ == "__main__":
