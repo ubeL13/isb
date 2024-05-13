@@ -1,18 +1,14 @@
-import java.math.BigInteger;
 import java.util.Random;
 
 public class Main {
     public static void main(String[] args) {
         Random random = new Random();
-        BigInteger bigInt = new BigInteger(128, random);
-        String binarySequence = bigInt.toString(2);
-        while (binarySequence.length() < 128) {
-            binarySequence = "0" + binarySequence;
+        StringBuilder binarySequence = new StringBuilder();
+        for (int i = 0; i < 16; i++) {
+            String binaryString = Integer.toBinaryString(random.nextInt(256));
+            binaryString = String.format("%8s", binaryString).replace(' ', '0');
+            binarySequence.append(binaryString);
         }
-        System.out.println("128-bit binary sequence: " + binarySequence);
+        System.out.println("128-bit binary sequence: " + binarySequence.toString());
     }
 }
-
-
-
-
