@@ -1,10 +1,10 @@
 import json
-import os
+
 from typing import Dict
 
 from constants import PATHS
 from decryption_frequency import KEY as known_frequencies
-from decryption_key import KEY as decryption_key
+from decryption_key import KEY as key_for_decryption
 
 
 def read_settings(settings_path: str) -> Dict:
@@ -14,12 +14,33 @@ def read_settings(settings_path: str) -> Dict:
     Returns:
         A dictionary containing the settings.
     """
-    with open(settings_path, 'r', encoding='utf-8') as file:
-        return json.load(file)
+    try:
+        with open(settings_path, 'r', encoding='utf-8') as file:
+            return json.load(file)
+    except FileNotFoundError as error:
+        raise FileNotFoundError(f"Settings file not found: {error}")
+    except json.JSONDecodeError as error:
+        raise json.JSONDecodeError(f"Error decoding JSON: {error}")
+
+
+def read_text(file_path: str) -> str:
+    """
+    Reads and returns the content of the specified text file.
+    Args:
+        file_path: The path to the text file to be read.
+    """
+    try:
+        with open(file_path, 'r', encoding='utf-8') as file:
+            return file.read()
+    except FileNotFoundError as error:
+        raise FileNotFoundError(f"Text file not found: {error}")
+    except IOError as error:
+        raise IOError(f"Error reading text file: {error}")
 
 
 def frequency_analysis(text: str) -> Dict:
-    """Analyzes the frequency of letters in a text.
+    """
+    Analyzes the frequency of letters in a text.
     Args:
         text: A string representing the text to analyze.
     Returns:
@@ -29,13 +50,13 @@ def frequency_analysis(text: str) -> Dict:
     len_text = len(text)
     for letter in text:
         if letter not in dictionary_of_frequency:
-            frequency = text.count(letter) / len_text
-            dictionary_of_frequency[letter] = frequency
+            dictionary_of_frequency[letter] = text.count(letter) / len_text
     return dictionary_of_frequency
 
 
 def create_decryption_key(encrypted_frequencies: Dict, known_frequencies: Dict) -> Dict:
-    """Creates a decryption key.
+    """
+    Creates a decryption key.
     Args:
         encrypted_frequencies: A dictionary representing the frequency of encrypted letters.
         known_frequencies: A dictionary representing the frequency of known letters.
@@ -47,13 +68,25 @@ def create_decryption_key(encrypted_frequencies: Dict, known_frequencies: Dict) 
     return {encrypted_char: known_char for (encrypted_char, _), (known_char, _) in zip(sorted_encrypted, sorted_known)}
 
 
+def write_decryption_key_to_file(key: Dict, file_path: str):
+    """
+    This function creates a file at a specified path with
+    a representation of the decryption key.
+    :param key: A dictionary representing the decryption key.
+    :param file_path: The file path where the key should be written.
+    """
+    try:
+        with open(file_path, 'w', encoding='utf-8') as file:
+            file.write(f"KEY = {json.dumps(key, ensure_ascii=False, indent=4)}")
+    except IOError as error:
+        raise IOError(f"Error writing to key file: {error}")
+
+
 def decrypt_text(encrypted_text: str, decryption_key: Dict) -> str:
     """Decrypts a text using a decryption key.
-
     Args:
         encrypted_text: The text to decrypt.
         decryption_key: The key to use for decryption.
-
     Returns:
         The decrypted text.
     """
@@ -61,22 +94,26 @@ def decrypt_text(encrypted_text: str, decryption_key: Dict) -> str:
 
 
 if __name__ == "__main__":
-    paths = read_settings(PATHS)
-    folder = paths['folder']
-    source_file_path = f"{folder}/{paths['source_file']}"
-    output_file_decrypted_path = f"{folder}/{paths['output_file_decrypted']}"
-    key_path = 'decryption_key.py'
+    try:
+        paths = read_settings(PATHS)
+        folder = paths['folder']
+        source_file_path = f"{folder}/{paths['source_file']}"
+        output_file_decrypted_path = f"{folder}/{paths['output_file_decrypted']}"
+        key_path = 'decryption_key.py'
 
-    if not os.path.isfile(key_path) or os.stat(key_path).st_size == 0:
-        with open(source_file_path, 'r', encoding='utf-8') as file:
-            encrypted_text = file.read()
+        encrypted_text = read_text(source_file_path)
         encrypted_frequencies = frequency_analysis(encrypted_text)
-        decryption_key = create_decryption_key(encrypted_frequencies, known_frequencies)
-        with open(key_path, 'w', encoding='utf-8') as file:
-            file.write(f"KEY = {json.dumps(decryption_key, ensure_ascii=False, indent=4)}")
 
-    with open(source_file_path, 'r', encoding='utf-8') as file:
-        encrypted_text = file.read()
-    decrypted_text = decrypt_text(encrypted_text, decryption_key)
-    with open(output_file_decrypted_path, 'w', encoding='utf-8') as file:
-        file.write(decrypted_text)
+        if len(key_for_decryption) == 0:
+            decryption_key = create_decryption_key(encrypted_frequencies, known_frequencies)
+            write_decryption_key_to_file(decryption_key, key_path)
+        else:
+            decryption_key = key_for_decryption
+
+        decrypted_text = decrypt_text(encrypted_text, decryption_key)
+        with open(output_file_decrypted_path, 'w', encoding='utf-8') as file:
+            file.write(decrypted_text)
+    except (FileNotFoundError, IOError) as error:
+        print(f"File error: {error}")
+    except json.JSONDecodeError as error:
+        print(f"Error decoding JSON: {error}")
