@@ -62,8 +62,11 @@ def write_text(file_path: str, text: str) -> None:
     :param file_path: The path to the file where the text will be written.
     :param text: The text to write to the file.
     """
-    with open(file_path, "w", encoding="utf-8") as file:
-        file.write(text)
+    try:
+        with open(file_path, "w", encoding="utf-8") as file:
+            file.write(text)
+    except IOError as e:
+        print(f"Error while writing file: {e}")
 
 
 def main() -> None:

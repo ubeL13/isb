@@ -8,7 +8,8 @@ from decryption_key import KEY as key_for_decryption
 
 
 def read_settings(settings_path: str) -> Dict:
-    """Reads a JSON settings file.
+    """
+    Reads a JSON settings file.
     Args:
         settings_path: A string representing the path to the settings file.
     Returns:
@@ -83,7 +84,8 @@ def write_decryption_key_to_file(key: Dict, file_path: str):
 
 
 def decrypt_text(encrypted_text: str, decryption_key: Dict) -> str:
-    """Decrypts a text using a decryption key.
+    """
+    Decrypts a text using a decryption key.
     Args:
         encrypted_text: The text to decrypt.
         decryption_key: The key to use for decryption.
