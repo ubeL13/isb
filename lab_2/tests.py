@@ -1,6 +1,9 @@
 import json
-import constants
+
 from scipy.stats import norm, chi2
+
+import constants
+
 
 def frequency_test(bit_string: str) -> float:
     """
@@ -68,6 +71,7 @@ def longest_run_ones_test(bit_string: str, block_size: int) -> tuple[float, floa
     p_value = chi2.sf(chi_squared_stat,
                       len(pi_values) - 1)
     return chi_squared_stat, p_value
+
 
 try:
     with open(constants.PATH, 'r') as file:
