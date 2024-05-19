@@ -2,7 +2,7 @@ import json
 
 from typing import Dict
 
-from constants import PATHS
+from constants import PATHS, KEYPATH
 from decryption_frequency import KEY as known_frequencies
 from decryption_key import KEY as key_for_decryption
 
@@ -101,7 +101,7 @@ if __name__ == "__main__":
         folder = paths['folder']
         source_file_path = f"{folder}/{paths['source_file']}"
         output_file_decrypted_path = f"{folder}/{paths['output_file_decrypted']}"
-        key_path = 'decryption_key.py'
+        key_path = KEYPATH
 
         encrypted_text = read_text(source_file_path)
         encrypted_frequencies = frequency_analysis(encrypted_text)
