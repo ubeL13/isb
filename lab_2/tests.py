@@ -1,8 +1,9 @@
 import json
 import math
 
-from scipy.stats import norm, chi2
-from scipy.special import erfc, gammainc
+from scipy.stats import norm
+from scipy.special import erfc
+from mpmath import gammainc
 
 from constants import PATH, BLOCK_SIZE, PI_VALUES
 
@@ -57,86 +58,73 @@ def longest_run_ones_test(bit_string: str, block_size: int) -> tuple[float, floa
     Returns:
     tuple[float, float]: A tuple containing the chi-squared statistic and the p-value.
     """
-    max_len = [bit_string[i * block_size: (i + 1) * block_size] for i in range(0, len(bit_string) // block_size)]
-    v_counts = [0, 0, 0, 0]
-    for block in max_len:
-        count = 0
-        max_length = 0
+    bits = [bit_string[i:i + block_size] for i in range(0, len(bit_string), block_size)]
+
+    v_counts = [0] * 4
+
+    for block in bits:
+        longest = 0
         for bit in block:
             if bit == '1':
-                count += 1
-                max_length = max(max_length, count)
+                longest += 1
             else:
-                count = 0
-        if max_length <= 1:
+                longest = 0
+
+        if longest <= 1:
             v_counts[0] += 1
-        elif max_length == 2:
+        elif longest == 2:
             v_counts[1] += 1
-        elif max_length == 3:
+        elif longest == 3:
             v_counts[2] += 1
-        elif max_length >= 4:
+        else:
             v_counts[3] += 1
-    chi_squared = sum(((v_counts[i] - len(max_len) * PI_VALUES[i]) ** 2) / (len(max_len) * PI_VALUES[i]) for i in range(4))
+
+    chi_squared = sum(
+        ((v_counts[i] - len(bits) * PI_VALUES[i]) ** 2) / (len(bits) * PI_VALUES[i]) for i in range(4))
     p_value = gammainc(1.5, chi_squared / 2)
+
     return p_value
 
-    # blocks = [bit_string[i * block_size: (i + 1) * block_size] for i in range(0, len(bit_string) // block_size)]
-    # for block in range(0, len(name), 8):
-    #         block = name[step: step + 8]
-    #         maxline = 0
-    #         count = 0
-    #         for i in block:
-    #             if i == '1':
-    #                 count += 1
-    #                 maxline = max(maxline, count)
-    #             else:
-    #                 count = 0
-    #         max_len[maxline] = max_len.get(maxline, 0) + 1
-    #     for maxline, count in max_len.items():
-    #         if maxline == 1:
-    #             v[1] += count
-    #         elif maxline == 2:
-    #             v[2] += count
-    #         elif maxline == 3:
-    #             v[3] += count
-    #         else:
-    #             v[4] += count
-    #     xi_squared = sum(((v[i] - 16 * PI[i]) ** 2) / (16 * PI[i]) for i in range(1, 5))
-    #     p = mpmath.gammainc(3 / 2, xi_squared / 2)
-    #     return p
+import json
 
+# Предполагаем, что функции frequency_test, runs_test и longest_run_ones_test уже определены
+# Предполагаем, что переменная BLOCK_SIZE также определена
 
-try:
-    with open(PATH, 'r') as file:
-        sequences = json.load(file)
-except FileNotFoundError:
-    print(f"Error: The file {PATH} was not found.")
-    exit()
-except json.JSONDecodeError:
-    print(f"Error: The file {PATH} contains invalid JSON.")
-    exit()
+def main():
+    PATH = 'path/to/your/file.json'  # Замените на фактический путь к вашему файлу
 
-results = {}
-for name, bit_string in sequences.items():
-    if not all(bit in ('0', '1') for bit in bit_string):
-        print(f"Error: The sequence {name} contains invalid characters.")
-        continue
-    if len(bit_string) % BLOCK_SIZE != 0:
-        print(f"Error: The sequence {name} is not a multiple of the block size {BLOCK_SIZE}.")
-        continue
+    try:
+        with open(PATH, 'r') as file:
+            sequences = json.load(file)
+    except FileNotFoundError:
+        print(f"Error: The file {PATH} was not found.")
+        exit()
+    except json.JSONDecodeError:
+        print(f"Error: The file {PATH} contains invalid JSON.")
+        exit()
 
-    freq_p_value = frequency_test(bit_string)
-    runs_p_value = runs_test(bit_string)
-    longest_runs_p_value = longest_run_ones_test(bit_string, BLOCK_SIZE)
+    results = {}
+    for name, bit_string in sequences.items():
+        if not all(bit in ('0', '1') for bit in bit_string):
+            print(f"Error: The sequence {name} contains invalid characters.")
+            continue
+        if len(bit_string) % BLOCK_SIZE != 0:
+            print(f"Error: The sequence {name} is not a multiple of the block size {BLOCK_SIZE}.")
+            continue
+        freq_p_value = frequency_test(bit_string)
+        runs_p_value = runs_test(bit_string)
+        longest_runs_p_value = longest_run_ones_test(bit_string, BLOCK_SIZE)
+        results[name] = {
+            'frequency_test_p_value': freq_p_value,
+            'runs_test_p_value': runs_p_value,
+            'longest_run_ones_p_value': longest_runs_p_value
+        }
 
-    results[name] = {
-        'frequency_test_p_value': freq_p_value,
-        'runs_test_p_value': runs_p_value,
-        'longest_run_ones_p_value': longest_runs_p_value
-    }
+    for name, result in results.items():
+        print(f"Results for {name}:")
+        print(f"Frequency Test p-value: {result['frequency_test_p_value']}")
+        print(f"Runs Test p-value: {result['runs_test_p_value']}")
+        print(f"Longest Run of Ones p-value: {result['longest_run_ones_p_value']}")
 
-for name, result in results.items():
-    print(f"Results for {name}:")
-    print(f"Frequency Test p-value: {result['frequency_test_p_value']}")
-    print(f"Runs Test p-value: {result['runs_test_p_value']}")
-    print(f"Longest Run of Ones p-value: {result['longest_run_ones_p_value']}")
+if __name__ == "__main__":
+    main()
