@@ -99,14 +99,15 @@ def longest_run_ones_test(bit_string: str, block_size: int) -> tuple[float, floa
                     max_length = max(max_length, count)
                 else:
                     count = 0
-            if max_length <= 1:
-                v_counts[0] += 1
-            elif max_length == 2:
-                v_counts[1] += 1
-            elif max_length == 3:
-                v_counts[2] += 1
-            elif max_length >= 4:
-                v_counts[3] += 1
+            match max_length:
+                case int(0) | int(1):
+                    v_counts[0] += 1
+                case int(2):
+                    v_counts[1] += 1
+                case int(3):
+                    v_counts[2] += 1
+                case _:
+                    v_counts[3] += 1
 
         chi_squared = sum(
             ((v_counts[i] - len(max_len) * PI_VALUES[i]) ** 2) / (len(max_len) * PI_VALUES[i]) for i in range(4)
