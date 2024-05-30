@@ -9,59 +9,6 @@ from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 logging.basicConfig(level=logging.INFO)
 
 
-class SymmetricCryptography:
-    def __init__(self, key_path: str) -> None:
-        self.key_path = key_path
-
-    def generate_key(self, size: int) -> bytes:
-        key = os.urandom(size)
-        return key
-
-    def encrypt_data(self, plaintext):
-        """Encrypt plaintext using Camellia algorithm with CBC mode.
-
-        Args:
-            plaintext (bytes): Data to be encrypted.
-
-        Returns:
-            bytes: Encrypted data with prepended IV.
-        """
-        iv = os.urandom(algorithms.Camellia.block_size // 8)
-        padder = padding.PKCS7(algorithms.Camellia.block_size).padder()
-        padded_plaintext = padder.update(plaintext) + padder.finalize()
-        cipher = Cipher(algorithms.Camellia(self.secret_key), modes.CBC(iv))
-        encryptor = cipher.encryptor()
-        encrypted_data = encryptor.update(padded_plaintext) + encryptor.finalize()
-        return iv + encrypted_data
-
-
-class AsymmetricEncryptionHandler:
-    def __init__(self, private_key_path: str, public_key_path: str) -> None:
-        self.private_key_path = private_key_path
-        self.public_key_path = public_key_path
-
-    def generate_key(self, size: int) -> tuple:
-        private_key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
-        public_key = private_key.public_key()
-        return private_key, public_key
-
-    def perform_encryption(self, plain_data, rsa_public_key):
-        """Encrypts the provided data using the RSA public key.
-
-        Args:
-            plain_data (bytes): The data to be encrypted.
-            rsa_public_key: The public key object for RSA encryption.
-
-        Returns:
-            bytes: The encrypted data.
-        """
-        oaep_padding = padding.OAEP(
-            mgf=padding.MGF1(algorithm=hashes.SHA256()),
-            algorithm=hashes.SHA256(),
-            label=None
-        )
-        encrypted_data = rsa_public_key.encrypt(plain_data, oaep_padding)
-        return encrypted_data
 
 
 def main():
@@ -100,7 +47,7 @@ def main():
     )
     encrypted_symmetric_key = public_key.encrypt(symmetric_key, oaep_padding)
 
-    # Сохранение ключей
+
     with open(private_key_path, "wb") as private_file:
         private_file.write(private_pem)
     logging.info(f"Private key saved to {private_key_path}")

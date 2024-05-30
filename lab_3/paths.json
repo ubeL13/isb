@@ -1,8 +1,9 @@
 {
-    "folder": "lab_3",
-    "encrypted_file": "encrypted_text.txt",
-    "decrypted_file": "decrypted_text.txt",
-    "symmetric_key": "symmetric_key.txt",
-    "public_path": "public_key.pem",
-    "private_path": "private_key.pem"
+    "folder": "/texts/lab_3",
+    "encrypted_file": "/texts/encrypted_text.txt",
+    "decrypted_file": "/texts/decrypted_text.txt",
+    "symmetric_key": "/texts/symmetric_key.txt",
+    "public_path": "/texts/public_key.pem",
+    "private_path": "/texts/private_key.pem",
+    "text": "/texts/text.txt"
 }
