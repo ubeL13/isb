@@ -3,14 +3,35 @@ import os
 from cryptography.hazmat.primitives import padding
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 
+
 class Symmetric:
     """
     Class for symmetrical encryption and decryption using the Camellia algorithm.
     """
+
     def create_key(self, bits: int) -> bytes:
-        return os.urandom(bits // 8)
+        """
+        Generates a random symmetric key of a specified bit length.
+        The key is generated using the operating system's source of randomness, which is suitable for cryptographic use.
+        :param bits: the bit length for the symmetric key. This value should be a multiple of 8.
+        :return: A bytes object containing the symmetric key.
+        """
+        try:
+            return os.urandom(bits // 8)
+        except Exception as e:
+            print(f"An error occurred during key generation: {e}")
+            raise
 
     def encrypt_text_symmetric(self, plain_data: bytes, key: bytes, bits: int) -> bytes:
+        """
+        Encrypts plaintext data using the Camellia encryption algorithm in CBC mode.
+        Parameters:
+        plain_data: The plaintext data to be encrypted, provided as a bytes object.
+        key: The symmetric key for encryption, also provided as a bytes object.
+        bits: The bit strength of the encryption key. Must be one of 128, 192, or 256.
+        Returns:
+        A bytes object containing the IV followed by the encrypted data.
+        """
         try:
             if bits not in (128, 192, 256):
                 raise ValueError("Invalid key size. Choose 128, 192, or 256 bits.")
@@ -25,9 +46,17 @@ class Symmetric:
             return iv_value + cipher_data
         except Exception as e:
             print(f"An error occurred during encryption: {e}")
-            raise e
+            raise
 
     def decrypt_text_symmetrict(self, cipher_data: bytes, key: bytes, bits: int) -> str:
+        """
+        Decrypts data that has been encrypted using the Camellia encryption algorithm in CBC mode.
+        plain_data: The plaintext data to be encrypted, provided as a bytes object.
+        key: The symmetric key for encryption, also provided as a bytes object.
+        bits: The bit strength of the encryption key. Must be one of 128, 192, or 256.
+        Returns:
+        A bytes object containing the IV followed by the encrypted data.
+        """
         try:
             iv_value = cipher_data[:16]
             cipher_data = cipher_data[16:]
@@ -42,4 +71,4 @@ class Symmetric:
             return decrypted_padded_data.decode('utf-8')
         except Exception as e:
             print(f"An error occurred during decryption: {e}")
-            raise e
+            raise
