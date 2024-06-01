@@ -5,173 +5,188 @@ from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.serialization import load_pem_public_key, load_pem_private_key
 
 
-def load_key(path: str, file_mode: str, func, *args) ->any:
+def write_private_key(file_path: str, key: rsa.RSAPrivateKey) -> None:
     """
-    Load and return a key from a file.
-
-    Parameters:
-    path (str): The path to the file containing the key.
-    file_mode (str): The mode in which to open the file. 'rb' for keys, 'r' for text.
-    func: The function to apply to the file content.
-    *args: The arguments to pass to func.
-    Returns:
-    The result of applying func to the file content.
+    Write an RSA private key to a PEM file.
+    :param file_path: Path where the PEM file will be saved.
+    :param key: An RSAPrivateKey object to serialize.
     """
     try:
-        with open(path, file_mode) as file:
-            return func(file.read(), *args)
+        private_key_pem = key.private_bytes(
+            encoding=serialization.Encoding.PEM,
+            format=serialization.PrivateFormat.TraditionalOpenSSL,
+            encryption_algorithm=serialization.NoEncryption()
+        )
+        with open(file_path, 'wb') as file:
+            file.write(private_key_pem)
+    except IOError as e:
+        print(f"An I/O error occurred: {e}")
+        raise
+
+
+def write_public_key(file_path: str, key: rsa.RSAPublicKey) -> None:
+    """
+    Write an RSA public key to a PEM file.
+    :param file_path: Path where the PEM file will be saved.
+    :param key: An RSAPublicKey object to serialize.
+    """
+    try:
+        public_key_pem = key.public_bytes(
+            encoding=serialization.Encoding.PEM,
+            format=serialization.PublicFormat.SubjectPublicKeyInfo
+        )
+        with open(file_path, 'wb') as file:
+            file.write(public_key_pem)
+    except IOError as e:
+        print(f"An I/O error occurred: {e}")
+        raise
+
+
+def write_asymmetric_keys(private_key_path: str, public_key_path: str, private_key: rsa.RSAPrivateKey,
+                          public_key: rsa.RSAPublicKey) -> None:
+    """
+    Write both RSA private and public keys to their respective PEM files.
+    :param private_key_path: Path to save the private key PEM file.
+    :param public_key_path: Path to save the public key PEM file.
+    :param private_key: An RSAPrivateKey object to serialize.
+    :param public_key: An RSAPublicKey object to serialize.
+    """
+    write_private_key(private_key_path, private_key)
+    write_public_key(public_key_path, public_key)
+
+
+def write_symmetric_key(file_path: str, key: bytes) -> None:
+    """
+    Write a symmetric key to a file.
+    :param file_path: Path where the file will be saved.
+    :param key: The symmetric key to write.
+    """
+    try:
+        with open(file_path, 'wb') as file:
+            file.write(key)
+    except IOError as e:
+        print(f"An I/O error occurred while writing to {file_path}: {e}")
+        raise
+
+
+def load_private_key(file_path: str) -> rsa.RSAPrivateKey:
+    """
+    Load an RSA private key from a PEM file.
+    :param file_path: Path to the PEM file containing the private key.
+    :return: An RSAPrivateKey object.
+    """
+    try:
+        with open(file_path, 'rb') as file:
+            private_key_data = file.read()
+        private_key = load_pem_private_key(private_key_data, password=None)
+        return private_key
     except FileNotFoundError:
-        print("File not founded.")
+        print(f"The file {file_path} was not found.")
         raise
-    except Exception as e:
-        print(f"Error: {e}")
+    except ValueError:
+        print("The private key could not be deserialized.")
         raise
 
 
-def deserialize_private(path_to_private_key: str) -> rsa.RSAPrivateKey:
+def load_public_key(file_path: str) -> rsa.RSAPublicKey:
     """
-    Load and return a private RSA key from a file.
-    Parameters:
-    path_to_private_key (str): The path to the file containing the private key.
-    Returns:
-    rsa.RSAPrivateKey: The private RSA key.
-    """
-    return load_key(path_to_private_key, 'rb', load_pem_private_key, None)
-
-
-def deserialize_public(path_to_public_key: str) -> rsa.RSAPublicKey:
-    """
-    Load and return a public RSA key from a file.
-    Parameters:
-    path_to_public_key (str): The path to the file containing the public key.
-    Returns:
-    rsa.RSAPublicKey: The public RSA key.
-    """
-    return load_key(path_to_public_key, 'rb', load_pem_public_key)
-
-
-def write_key(path: str, file_mode: str, key, func, **kwargs):
-    """
-    Write a key to a file.
-
-    Parameters:
-    path (str): The path to the file where the key will be written.
-    file_mode (str): The mode in which to open the file. 'wb' for binary files, 'w' for text files.
-    key: The key to write to the file.
-    func: The method of the key object to serialize the key.
-    **kwargs: Additional keyword arguments to pass to func.
+    Load an RSA public key from a PEM file.
+    :param file_path: Path to the PEM file containing the public key.
+    :return: An RSAPublicKey object.
     """
     try:
-        with open(path, file_mode) as file:
-            file.write(func(**kwargs))
+        with open(file_path, 'rb') as file:
+            public_key_data = file.read()
+        public_key = load_pem_public_key(public_key_data)
+        return public_key
     except FileNotFoundError:
-        print("File not found")
+        print(f"The file {file_path} was not found.")
         raise
-    except Exception as e:
-        print(f"Error: {e}")
+    except ValueError:
+        print("The public key could not be deserialized.")
         raise
 
-# Исправляем вызовы функций serialize_private и serialize_public:
-def serialize_private(path_to_private_key: str, private_key: rsa.RSAPrivateKey) -> None:
-    return write_key(path_to_private_key, 'wb', private_key, private_key.private_bytes,
-                     encoding=serialization.Encoding.PEM, format=serialization.PrivateFormat.TraditionalOpenSSL,
-                     encryption_algorithm=serialization.NoEncryption())
 
-def serialize_public(path_to_public_key: str, public_key: rsa.RSAPublicKey) -> None:
-    return write_key(path_to_public_key, 'wb', public_key, public_key.public_bytes,
-                     encoding=serialization.Encoding.PEM, format=serialization.PublicFormat.SubjectPublicKeyInfo)
-def serialize_asymmetric_keys(path_to_private_key: str, path_to_public_key: str, private_key: rsa.RSAPrivateKey,
-                              public_key: rsa.RSAPublicKey) -> None:
+def load_symmetric_key(file_path: str) -> bytes:
     """
-    Serialize and write both private and public RSA keys to their respective files.
-    Parameters:
-    path_to_private_key (str): The path to the file where the private key will be written.
-    path_to_public_key (str): The path to the file where the public key will be written.
-    private_key: The private RSA key to serialize.
-    public_key: The public RSA key to serialize.
-    Returns:
-    None
-    """
-    serialize_private(path_to_private_key, private_key)
-    serialize_public(path_to_public_key, public_key)
-
-
-def serialize_symmetric_key(path_to_symmetric_key: str, symmetric_key: bytes) -> None:
-    """
-    Serialize and write a symmetric key to a file.
-    Parameters:
-    path_to_symmetric_key (str): The path to the file where the symmetric key will be written.
-    symmetric_key (bytes): The symmetric key to serialize.
-    Returns:
-    None
-    """
-    write_key(path_to_symmetric_key, 'wb', symmetric_key, lambda x, *args: x)
-
-
-def deserialize_symmetric_key(path_to_symmetric_key: str) -> bytes:
-    """
-    Load and return a symmetric key from a file.
-    Parameters:
-    path_to_symmetric_key (str): The path to the file containing the symmetric key.
-    Returns:
-    bytes: The deserialized symmetric key.
-    """
-    return load_key(path_to_symmetric_key, 'rb', lambda x, *args: x)
-
-
-def save_text(file_name: str, text: bytes)-> None:
-    """
-    Save binary text to a file.
-    Parameters:
-    file_name (str): The name of the file where the text will be saved.
-    text (bytes): The binary text to save.
-    Returns:
-    None
-    """
-    write_key(file_name, 'wb', text, lambda x, *args: x)
-
-
-def save_text_str(file_name: str, text: str)-> None:
-    """
-    Save text to a file in text format.
-    Parameters:
-    file_name (str): The name of the file where the text will be saved.
-    text (str): The text to save.
-    Returns:
-    None
-    """
-    write_key(file_name, 'w', text, lambda x, *args: x)
-
-
-def read_text(file_name: str)-> bytes:
-    """
-    Read binary text from a file.
-    Parameters:
-    file_name (str): The name of the file to read from.
-    Returns:
-    bytes: The binary text read from the file.
-    """
-    return load_key(file_name, 'rb', lambda x, *args: x)
-
-
-def read_json_file(file_path: str) -> dict:
-    """
-    Read a JSON file and return the data as a dictionary.
-    Parameters:
-    file_path (str): The path to the JSON file.
-    Returns:
-    dict: The data from the JSON file.
+    Load a symmetric key from a file.
+    :param file_path: Path to the file containing the symmetric key.
+    :return: The symmetric key.
     """
     try:
-        with open(file_path, "r", encoding="UTF-8") as file:
+        with open(file_path, 'rb') as file:
+            key = file.read()
+        return key
+    except FileNotFoundError:
+        print(f"The file {file_path} was not found.")
+        raise
+    except IOError as e:
+        print(f"An I/O error occurred while reading from {file_path}: {e}")
+        raise
+
+
+def write_text(file_name: str, text: bytes) -> None:
+    """
+    Write binary text to a file.
+    :param file_name: The name of the file to write to.
+    :param text: The binary text to write.
+    """
+    try:
+        with open(file_name, 'wb') as file:
+            file.write(text)
+    except IOError as e:
+        print(f"An I/O error occurred while writing to {file_name}: {e}")
+        raise
+
+
+def write_text_str(file_name: str, text: str) -> None:
+    """
+    Write string text to a file.
+    :param file_name: The name of the file to write to.
+    :param text: The string text to write.
+    """
+    try:
+        with open(file_name, 'w') as file:
+            file.write(text)
+    except IOError as e:
+        print(f"An I/O error occurred while writing to {file_name}: {e}")
+        raise
+
+
+def load_text(file_name: str) -> bytes:
+    """
+    Load binary text from a file.
+    :param file_name: The name of the file to read from.
+    :return: The binary text.
+    """
+    try:
+        with open(file_name, 'rb') as file:
+            content = file.read()
+        return content
+    except FileNotFoundError:
+        print(f"The file {file_name} was not found.")
+        raise
+    except IOError as e:
+        print(f"An I/O error occurred while reading from {file_name}: {e}")
+        raise
+
+
+def load_json_file(file_path: str) -> dict:
+    """
+    Load a JSON object from a file.
+    :param file_path: The path to the file.
+    :return: The JSON object.
+    """
+    try:
+        with open(file_path, 'r', encoding='utf-8') as file:
             json_data = json.load(file)
-            return json_data
+        return json_data
     except FileNotFoundError:
-        print("File not founded.")
+        print(f"The file {file_path} was not found.")
         raise
     except json.JSONDecodeError:
-        print("Error while reading json file.")
+        print(f"Error decoding JSON from {file_path}.")
         raise
-    except Exception as e:
-        print(f"Error: {e}")
+    except IOError as e:
+        print(f"An I/O error occurred while reading from {file_path}: {e}")
         raise
