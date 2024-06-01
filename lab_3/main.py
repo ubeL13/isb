@@ -1,6 +1,5 @@
 import tkinter as tk
 from tkinter import filedialog, messagebox, ttk
-import os
 from hybrid import Mixed
 from serialization_deserialization import load_json_file
 import constants
@@ -15,18 +14,21 @@ class Window(tk.Tk):
     def init_ui(self):
         self.title("Гибридная Криптосистема")
         self.geometry("500x500")
-        tk.Label(self, text="Привет пользователь!").pack()
 
         self.label_number_of_bits = tk.Label(self, text="Выберите количество битов для ключей:")
         self.label_number_of_bits.pack()
 
-        self.combo_box = ttk.Combobox(self, values=[ "128","196", "256" ])
+        self.combo_box = ttk.Combobox(self, values=["128", "196", "256"])
         self.combo_box.pack()
 
         tk.Button(self, text="Инициализация криптосистемы", command=self.create_cryptosystem).pack()
         tk.Button(self, text="Создание ключей", command=self.generate_keys_for_cryptosystem).pack()
         tk.Button(self, text="Зашифровать текст", command=self.encrypt_text).pack()
         tk.Button(self, text="Дешифровать текст", command=self.decrypt_text).pack()
+        tk.Button(self, text="Зашифровать с путями из JSON", command=self.encrypt_with_paths_from_json).pack()
+        tk.Button(self, text="Дешифровать с путями из JSON", command=self.decrypt_with_paths_from_json).pack()
+        tk.Button(self, text="Создание ключей с путями из JSON", command=self.generate_keys_from_json).pack()
+        tk.Button(self, text="Выход", command=self.quit).pack(side=tk.BOTTOM)
 
     def create_cryptosystem(self):
         number_of_bits = int(self.combo_box.get())
@@ -76,7 +78,6 @@ class Window(tk.Tk):
             messagebox.showerror("Ошибка", "Сначала создайте криптосистему!")
             return
 
-        # Запрос пользователю выбрать файл зашифрованного текста
         path_to_encrypted_text = filedialog.askopenfilename(title="Выберите зашифрованный текст",
                                                             filetypes=[("Encrypted files", "*.txt"),
                                                                        ("All files", "*.*")])
@@ -84,14 +85,12 @@ class Window(tk.Tk):
             messagebox.showerror("Ошибка", "Файл зашифрованного текста не выбран!")
             return
 
-        # Запрос пользователю выбрать файл с зашифрованным симметричным ключом
         path_to_symmetric_key = filedialog.askopenfilename(title="Выберите файл с симметричным ключом",
                                                            filetypes=[("Key files", "*.txt"), ("All files", "*.*")])
         if not path_to_symmetric_key:
             messagebox.showerror("Ошибка", "Файл симметричного ключа не выбран!")
             return
 
-        # Запрос пользователю выбрать файл с приватным ключом
         path_to_private_key = filedialog.askopenfilename(title="Выберите файл с приватным ключом",
                                                          filetypes=[("Private key files", "*.pem"),
                                                                     ("All files", "*.*")])
@@ -99,7 +98,6 @@ class Window(tk.Tk):
             messagebox.showerror("Ошибка", "Файл приватного ключа не выбран!")
             return
 
-        # Запрос пользователю выбрать место для сохранения расшифрованного текста
         path_to_save_decrypted_text = filedialog.asksaveasfilename(title="Сохранить расшифрованный текст как",
                                                                    defaultextension=".txt",
                                                                    filetypes=[("Text files", "*.txt"),
@@ -108,8 +106,6 @@ class Window(tk.Tk):
             messagebox.showerror("Ошибка", "Файл для сохранения расшифрованного текста не выбран!")
             return
 
-
-        # Попытка расшифровать текст с использованием выбранных файлов и сохранить результат
         try:
             self.cryptosystem.decrypt(path_to_encrypted_text, path_to_symmetric_key, path_to_private_key,
                                       path_to_save_decrypted_text)
@@ -121,6 +117,49 @@ class Window(tk.Tk):
                                   path_to_save_decrypted_text)
         messagebox.showinfo("Информация", "Текст успешно расшифрован.")
 
+    def encrypt_with_paths_from_json(self):
+        if not self.cryptosystem:
+            messagebox.showerror("Ошибка", "Сначала создайте криптосистему!")
+            return
+        try:
+            # Загрузка путей из файла paths.json с помощью функции load_json_file
+            paths = load_json_file(constants.PATHS)
+            self.cryptosystem.encrypt(paths['text'],
+                                      paths['symmetric_key'],
+                                      paths['private_key'],
+                                      paths['encrypted_file'])
+            messagebox.showinfo("Успех", "Текст успешно зашифрован.")
+        except Exception as e:
+            messagebox.showerror("Ошибка при шифровании", f"Произошла ошибка: {e}")
+
+    def decrypt_with_paths_from_json(self):
+        if not self.cryptosystem:
+            messagebox.showerror("Ошибка", "Сначала создайте криптосистему!")
+            return
+        try:
+
+            paths = load_json_file(constants.PATHS)
+            self.cryptosystem.decrypt(paths['encrypted_file'],
+                                      paths['symmetric_key'],
+                                      paths['private_key'],
+                                      paths['decrypted_file'])
+            messagebox.showinfo("Успех", "Текст успешно расшифрован.")
+        except Exception as e:
+            messagebox.showerror("Ошибка при дешифровании", f"Произошла ошибка: {e}")
+
+    def generate_keys_from_json(self):
+        if not self.cryptosystem:
+            messagebox.showerror("Ошибка", "Сначала создайте криптосистему!")
+            return
+        try:
+
+            paths = load_json_file(constants.PATHS)
+            self.cryptosystem.generate_keys(paths['symmetric_key'],
+                                            paths['public_key'],
+                                            paths['private_key'])
+            messagebox.showinfo("Успех", "Ключи успешно сгенерированы.")
+        except Exception as e:
+            messagebox.showerror("Ошибка при генерации ключей", f"Произошла ошибка: {e}")
 
 
 if __name__ == "__main__":
