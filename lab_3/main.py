@@ -72,12 +72,12 @@ class Window(Tk):
             messagebox.showerror("Ошибка", "Сначала создайте криптосистему!")
             return
 
-        path_to_symmetric_key = filedialog.asksaveasfilename(defaultextension=".txt",
-                                                             filetypes=[("Key files", "*.txt")])
-        path_to_public_key = filedialog.asksaveasfilename(defaultextension=".pub",
-                                                          filetypes=[("Public key files", "*.pem")])
-        path_to_private_key = filedialog.asksaveasfilename(defaultextension=".priv",
-                                                           filetypes=[("Private key files", "*.pem")])
+        path_to_symmetric_key = filedialog.askopenfilename(defaultextension=".txt",
+                                                           filetypes=[("Key files", "*.txt")])
+        path_to_public_key = filedialog.askopenfilename(defaultextension=".pem",
+                                                        filetypes=[("Public key files", "*.pem")])
+        path_to_private_key = filedialog.askopenfilename(defaultextension=".pem",
+                                                         filetypes=[("Private key files", "*.pem")])
 
         if not path_to_symmetric_key or not path_to_public_key or not path_to_private_key:
             messagebox.showerror("Ошибка", "Необходимо указать пути для всех ключей!")
@@ -101,7 +101,7 @@ class Window(Tk):
         path_to_text_for_encryption = filedialog.askopenfilename(filetypes=[("Text files", "*.txt")])
         path_to_symmetric_key = filedialog.askopenfilename(filetypes=[("Key files", "*.txt")])
         path_to_private_key = filedialog.askopenfilename(filetypes=[("Private key files", "*.pem")])
-        path_to_save_encrypted_text = filedialog.asksaveasfilename(defaultextension=".txt",
+        path_to_save_encrypted_text = filedialog.askopenfilename(defaultextension=".txt",
                                                                    filetypes=[("Encrypted files", "*.txt")])
 
         if (
@@ -145,7 +145,7 @@ class Window(Tk):
             messagebox.showerror("Ошибка", "Файл приватного ключа не выбран!")
             return
 
-        path_to_save_decrypted_text = filedialog.asksaveasfilename(title="Сохранить расшифрованный текст как",
+        path_to_save_decrypted_text = filedialog.askopenfilename(title="Сохранить расшифрованный текст как",
                                                                    defaultextension=".txt",
                                                                    filetypes=[("Text files", "*.txt"),
                                                                               ("All files", "*.*")])
