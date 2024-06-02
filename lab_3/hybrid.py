@@ -1,7 +1,6 @@
 from asymmetric import Asymmetric
 from symmetric import Symmetric
-from serialization_deserialization import load_text, write_text, write_text_str, load_symmetric_key, \
-    write_symmetric_key, write_asymmetric_keys
+from serialization_deserialization import CryptoFileManager
 
 
 class Mixed:
@@ -17,6 +16,7 @@ class Mixed:
         """
         self.symmetric = Symmetric()
         self.asymmetric = Asymmetric()
+        self.file_manager = CryptoFileManager()
         self.number_of_bits = bits
 
     def generate_keys(self, path_to_symmetric_key: str, path_to_public_key: str, path_to_private_key: str) -> None:
@@ -32,8 +32,11 @@ class Mixed:
         try:
             symmetric_key = self.symmetric.create_key(self.number_of_bits)
             keys = self.asymmetric.create_keys()
-            write_asymmetric_keys(path_to_private_key, path_to_public_key, keys[0], keys[1])
-            write_symmetric_key(path_to_symmetric_key, self.asymmetric.encrypt_text_asymmetric(symmetric_key, keys[1]))
+            write_key_asymmetric = self.file_manager.write_asymmetric_keys
+            write_key_asymmetric(path_to_private_key, path_to_public_key, keys[0], keys[1])
+            asymmetric_key = self.asymmetric.encrypt_text_asymmetric(symmetric_key, keys[1])
+            write_key_symmetric = self.file_manager.write_symmetric_key
+            write_key_symmetric(path_to_symmetric_key, asymmetric_key)
         except Exception as e:
             print(f"An error occurred during key generation: {e}")
 
@@ -50,12 +53,13 @@ class Mixed:
          Exception: If any errors occur during the encryption process.
         """
         try:
-            encrypted_symmetric_key = load_symmetric_key(path_to_symmetric_key)
-            decrypted_symmetric_key = self.asymmetric.decrypt_text_asymmetric(path_to_private_key,
-                                                                              encrypted_symmetric_key)
-            text = load_text(path_to_text_for_encryption)
-            write_text(path_to_save_encrypted_text, self.symmetric.encrypt_text_symmetric(text, decrypted_symmetric_key,
-                                                                                          self.number_of_bits))
+            encrypted_symmetric_key = self.file_manager.load_symmetric_key(path_to_symmetric_key)
+            asymmetric_decryption = self.asymmetric.decrypt_text_asymmetric
+            decrypted_symmetric_key = asymmetric_decryption(path_to_private_key, encrypted_symmetric_key)
+            text = self.file_manager.load_text(path_to_text_for_encryption)
+            symmetric_encryption = self.symmetric.encrypt_text_symmetric(text, decrypted_symmetric_key,
+                                                                         self.number_of_bits)
+            self.file_manager.write_text(path_to_save_encrypted_text, symmetric_encryption)
         except Exception as e:
             print(f"An error occurred during encryption: {e}")
 
@@ -72,12 +76,12 @@ class Mixed:
         Exception: If any errors occur during the decryption process.
         """
         try:
-            encrypted_symmetric_key = load_symmetric_key(path_to_symmetric_key)
+            encrypted_symmetric_key = self.file_manager.load_symmetric_key(path_to_symmetric_key)
             decrypted_symmetric_key = self.asymmetric.decrypt_text_asymmetric(path_to_private_key,
                                                                               encrypted_symmetric_key)
-            encrypted_text = load_text(path_to_encrypted_text)
-            write_text_str(path_to_save_decrypted_text,
-                           self.symmetric.decrypt_text_symmetrict(encrypted_text, decrypted_symmetric_key,
-                                                                  self.number_of_bits))
+            encrypted_text = self.file_manager.load_text(path_to_encrypted_text)
+            symmetric_decryption = self.symmetric.decrypt_text_symmetrict(encrypted_text, decrypted_symmetric_key,
+                                                                          self.number_of_bits)
+            self.file_manager.write_text_str(path_to_save_decrypted_text, symmetric_decryption)
         except Exception as e:
             print(f"An error occurred during decryption: {e}")
