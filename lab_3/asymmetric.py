@@ -2,7 +2,7 @@ from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.hazmat.primitives.asymmetric import padding as asym_padding
 from cryptography.hazmat.primitives import hashes
 
-from serialization_deserialization import load_private_key
+from serialization_deserialization import CryptoFileManager
 
 
 class Asymmetric:
@@ -48,7 +48,8 @@ class Asymmetric:
         bytes: The decrypted data.
         """
         try:
-            rsa_private_key = load_private_key(private_key_filepath)
+            key_path = CryptoFileManager()
+            rsa_private_key = key_path.load_private_key(private_key_filepath)
             oaep_padding = asym_padding.OAEP(
                 mgf=asym_padding.MGF1(algorithm=hashes.SHA256()),
                 algorithm=hashes.SHA256(),

@@ -1,12 +1,12 @@
-import tkinter as tk
-from tkinter import filedialog, messagebox, ttk
+from tkinter import Tk, Label, Button, messagebox, filedialog, BOTTOM
+from tkinter.ttk import Combobox
 
 from constants import PATHS
 from hybrid import Mixed
-from serialization_deserialization import load_json_file
+from serialization_deserialization import CryptoFileManager
 
 
-class Window(tk.Tk):
+class Window(Tk):
     """
     Represents a Window for the hybrid cryptosystem application.
     This class includes methods to initialize the Window, create a cryptosystem, generate keys, encrypt and decrypt text.
@@ -20,6 +20,7 @@ class Window(tk.Tk):
         super().__init__()
         self.cryptosystem = None
         self.init_ui()
+        self.key_path = CryptoFileManager()
 
     def init_ui(self):
         """
@@ -33,20 +34,20 @@ class Window(tk.Tk):
         self.title("Гибридная Криптосистема")
         self.geometry("500x500")
 
-        self.label_number_of_bits = tk.Label(self, text="Выберите количество битов для ключей:")
+        self.label_number_of_bits = Label(self, text="Выберите количество битов для ключей:")
         self.label_number_of_bits.pack()
 
-        self.combo_box = ttk.Combobox(self, values=["128", "196", "256"])
+        self.combo_box = Combobox(self, values=["128", "192", "256"])
         self.combo_box.pack()
 
-        tk.Button(self, text="Инициализация криптосистемы", command=self.create_cryptosystem).pack()
-        tk.Button(self, text="Создание ключей", command=self.generate_keys_for_cryptosystem).pack()
-        tk.Button(self, text="Зашифровать текст", command=self.encrypt_text).pack()
-        tk.Button(self, text="Дешифровать текст", command=self.decrypt_text).pack()
-        tk.Button(self, text="Зашифровать с путями из JSON", command=self.encrypt_with_paths_from_json).pack()
-        tk.Button(self, text="Дешифровать с путями из JSON", command=self.decrypt_with_paths_from_json).pack()
-        tk.Button(self, text="Создание ключей с путями из JSON", command=self.generate_keys_from_json).pack()
-        tk.Button(self, text="Выход", command=self.quit).pack(side=tk.BOTTOM)
+        Button(self, text="Инициализация криптосистемы", command=self.create_cryptosystem).pack()
+        Button(self, text="Создание ключей", command=self.generate_keys_for_cryptosystem).pack()
+        Button(self, text="Зашифровать текст", command=self.encrypt_text).pack()
+        Button(self, text="Дешифровать текст", command=self.decrypt_text).pack()
+        Button(self, text="Зашифровать с путями из JSON", command=self.encrypt_with_paths_from_json).pack()
+        Button(self, text="Дешифровать с путями из JSON", command=self.decrypt_with_paths_from_json).pack()
+        Button(self, text="Создание ключей с путями из JSON", command=self.generate_keys_from_json).pack()
+        Button(self, text="Выход", command=self.quit).pack(side=BOTTOM)
 
     def create_cryptosystem(self) -> None:
         """
@@ -103,7 +104,8 @@ class Window(tk.Tk):
         path_to_save_encrypted_text = filedialog.asksaveasfilename(defaultextension=".txt",
                                                                    filetypes=[("Encrypted files", "*.txt")])
 
-        if not path_to_text_for_encryption or not path_to_symmetric_key or not path_to_private_key or not path_to_save_encrypted_text:
+        if (
+                not path_to_text_for_encryption or not path_to_symmetric_key or not path_to_private_key or not path_to_save_encrypted_text):
             messagebox.showerror("Ошибка", "Необходимо указать пути к файлам для шифрования!")
             return
 
@@ -173,7 +175,7 @@ class Window(tk.Tk):
             messagebox.showerror("Ошибка", "Сначала создайте криптосистему!")
             return
         try:
-            paths = load_json_file(PATHS)
+            paths = self.key_path.load_json_file(PATHS)
             self.cryptosystem.encrypt(paths['text'],
                                       paths['symmetric_key'],
                                       paths['private_key'],
@@ -193,8 +195,7 @@ class Window(tk.Tk):
             messagebox.showerror("Ошибка", "Сначала создайте криптосистему!")
             return
         try:
-
-            paths = load_json_file(PATHS)
+            paths = self.key_path.load_json_file(PATHS)
             self.cryptosystem.decrypt(paths['encrypted_file'],
                                       paths['symmetric_key'],
                                       paths['private_key'],
@@ -214,8 +215,7 @@ class Window(tk.Tk):
             messagebox.showerror("Ошибка", "Сначала создайте криптосистему!")
             return
         try:
-
-            paths = load_json_file(PATHS)
+            paths = self.key_path.load_json_file(PATHS)
             self.cryptosystem.generate_keys(paths['symmetric_key'],
                                             paths['public_key'],
                                             paths['private_key'])
