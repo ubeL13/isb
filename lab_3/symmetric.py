@@ -35,7 +35,7 @@ class Symmetric:
         try:
             if bits not in (128, 192, 256):
                 raise ValueError("Invalid key size. Choose 128, 192, or 256 bits.")
-            data_padder = padding.PKCS7(bits).padder()
+            data_padder = padding.PKCS7(128).padder()
             padded_data = data_padder.update(plain_data) + data_padder.finalize()
 
             iv_value = os.urandom(16)
@@ -65,7 +65,7 @@ class Symmetric:
             decryptor_instance = camellia_cipher.decryptor()
             decrypted_data = decryptor_instance.update(cipher_data) + decryptor_instance.finalize()
 
-            data_unpadder = padding.PKCS7(bits).unpadder()
+            data_unpadder = padding.PKCS7(128).unpadder()
             decrypted_padded_data = data_unpadder.update(decrypted_data) + data_unpadder.finalize()
 
             return decrypted_padded_data.decode('utf-8')
